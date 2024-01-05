@@ -62,7 +62,7 @@ public partial class AuthSetupView
     )
     {
         var url = WebBrowser.Source.AbsoluteUri.TrimEnd('/');
-
+         Console.WriteLine(url);
         // Navigated to the home page (presumably after a successful login)
         if (string.Equals(url, HomePageUrl, StringComparison.OrdinalIgnoreCase))
         {
