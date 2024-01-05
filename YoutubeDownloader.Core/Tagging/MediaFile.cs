@@ -11,8 +11,10 @@ internal partial class MediaFile(TagFile file) : IDisposable
 
     public void SetArtist(string artist) => file.Tag.Performers = new[] { artist };
 
+
     public void SetArtistSort(string artistSort) => file.Tag.PerformersSort = new[] { artistSort };
 
+    ///设置Title
     public void SetTitle(string title) => file.Tag.Title = title;
 
     public void SetAlbum(string album) => file.Tag.Album = album;
