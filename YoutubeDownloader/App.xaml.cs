@@ -1,59 +1,69 @@
 ﻿using System;
 using System.Reflection;
 using System.Windows.Media;
-using MaterialDesignThemes.Wpf;
+using MaterialDesignThemes.Wpf; // 引入Material Design in XAML Toolkit库
 using YoutubeDownloader.Utils;
 
-namespace YoutubeDownloader;
-
-public partial class App
+namespace YoutubeDownloader
 {
-    private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
+    public partial class App
+   {
+        // 获取当前程序集的信息
+        private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
 
-    public static string Name { get; } = Assembly.GetName().Name!;
+        // 获取应用程序名称
+        public static string Name { get; } = Assembly.GetName().Name!;
 
-    public static Version Version { get; } = Assembly.GetName().Version!;
+        // 获取应用程序版本
+        public static Version Version { get; } = Assembly.GetName().Version!;
 
-    public static string VersionString { get; } = Version.ToString(3);
+        // 获取版本字符串（保留3位版本号）
+        public static string VersionString { get; } = Version.ToString(3);
 
-    public static string ProjectUrl { get; } = "https://github.com/Tyrrrz/YoutubeDownloader";
+        // 项目GitHub地址
+        public static string ProjectUrl { get; } = "https://github.com/Tyrrrz/YoutubeDownloader";
 
-    public static string LatestReleaseUrl { get; } = ProjectUrl + "/releases/latest";
-}
+        // 获取项目的最新发布版本链接
+        public static string LatestReleaseUrl { get; } = ProjectUrl + "/releases/latest";
 
-public partial class App
-{
-    private static Theme LightTheme { get; } =
-        Theme.Create(
-            new MaterialDesignLightTheme(),
-            MediaColor.FromHex("#343838"),
-            MediaColor.FromHex("#F9A825")
-        );
+        // 定义浅色主题，包含基础主题、主色调和强调色
+        private static Theme LightTheme { get; } =
+            Theme.Create(
+                new MaterialDesignLightTheme(), // 基于Material Design的浅色主题
+                MediaColor.FromHex("#343838"), // 主色调
+                MediaColor.FromHex("#F9A825")   // 强调色
+            );
 
-    private static Theme DarkTheme { get; } =
-        Theme.Create(
-            new MaterialDesignDarkTheme(),
-            MediaColor.FromHex("#E8E8E8"),
-            MediaColor.FromHex("#F9A825")
-        );
+        // 定义深色主题，包含基础主题、主色调和强调色
+        private static Theme DarkTheme { get; } =
+            Theme.Create(
+                new MaterialDesignDarkTheme(), // 基于Material Design的深色主题
+                MediaColor.FromHex("#E8E8E8"), // 主色调
+                MediaColor.FromHex("#F9A825")  // 强调色
+            );
 
-    public static void SetLightTheme()
-    {
-        var paletteHelper = new PaletteHelper();
-        paletteHelper.SetTheme(LightTheme);
+        // 设置应用程序为浅色主题
+        public static void SetLightTheme()
+        {
+            var paletteHelper = new PaletteHelper(); // 创建PaletteHelper对象以修改应用主题
+            paletteHelper.SetTheme(LightTheme); // 应用浅色主题
 
-        Current.Resources["SuccessBrush"] = new SolidColorBrush(Colors.DarkGreen);
-        Current.Resources["CanceledBrush"] = new SolidColorBrush(Colors.DarkOrange);
-        Current.Resources["FailedBrush"] = new SolidColorBrush(Colors.DarkRed);
-    }
+            // 设置不同状态的颜色资源
+            Current.Resources["SuccessBrush"] = new SolidColorBrush(Colors.DarkGreen);
+            Current.Resources["CanceledBrush"] = new SolidColorBrush(Colors.DarkOrange);
+            Current.Resources["FailedBrush"] = new SolidColorBrush(Colors.DarkRed);
+        }
 
-    public static void SetDarkTheme()
-    {
-        var paletteHelper = new PaletteHelper();
-        paletteHelper.SetTheme(DarkTheme);
+        // 设置应用程序为深色主题
+        public static void SetDarkTheme()
+        {
+            var paletteHelper = new PaletteHelper();
+            paletteHelper.SetTheme(DarkTheme); // 应用深色主题
 
-        Current.Resources["SuccessBrush"] = new SolidColorBrush(Colors.LightGreen);
-        Current.Resources["CanceledBrush"] = new SolidColorBrush(Colors.Orange);
-        Current.Resources["FailedBrush"] = new SolidColorBrush(Colors.OrangeRed);
+            // 设置不同状态的颜色资源
+            Current.Resources["SuccessBrush"] = new SolidColorBrush(Colors.LightGreen);
+            Current.Resources["CanceledBrush"] = new SolidColorBrush(Colors.Orange);
+            Current.Resources["FailedBrush"] = new SolidColorBrush(Colors.OrangeRed);
+        }
     }
 }

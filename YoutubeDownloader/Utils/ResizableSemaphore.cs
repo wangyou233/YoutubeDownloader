@@ -3,93 +3,102 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace YoutubeDownloader.Utils;
-
-internal partial class ResizableSemaphore : IDisposable
+namespace YoutubeDownloader.Utils
 {
-    private readonly object _lock = new();
-    private readonly Queue<TaskCompletionSource> _waiters = new();
-    private readonly CancellationTokenSource _cts = new();
-
-    private bool _isDisposed;
-    private int _maxCount = int.MaxValue;
-    private int _count;
-
-    public int MaxCount
+    /// <summary>
+    /// 一个可动态调整信号量大小的类，实现异步获取和释放资源的功能。
+    /// </summary>
+    internal partial class ResizableSemaphore : IDisposable
     {
-        get
+        private readonly object _syncLock = new();
+        private readonly Queue<TaskCompletionSource> _waitersQueue = new();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+        private bool _disposed;
+        private int _maxCount;
+        private int _currentCount;
+
+        public int MaxCount
         {
-            lock (_lock)
+            get
             {
-                return _maxCount;
+                lock (_syncLock)
+                {
+                    return _maxCount;
+                }
+            }
+            set
+            {
+                lock (_syncLock)
+                {
+                    _maxCount = value;
+                    Refresh();
+                }
             }
         }
-        set
+
+        private void Refresh()
         {
-            lock (_lock)
+            lock (_syncLock)
             {
-                _maxCount = value;
+                while (_currentCount < _maxCount && _waitersQueue.TryDequeue(out var waiter))
+                {
+                    // 如果等待者未被取消，则增加计数并唤醒等待的任务
+                    if (waiter.TrySetResult())
+                        _currentCount++;
+                }
+            }
+        }
+
+        public async Task<IDisposable> AcquireAsync(CancellationToken cancellationToken = default)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(ResizableSemaphore));
+
+            var waiter = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // 注册取消令牌回调以取消等待任务
+            await using var registration1 = _cancellationTokenSource.Token.Register(() => waiter.TrySetCanceled(_cancellationTokenSource.Token));
+            await using var registration2 = cancellationToken.Register(() => waiter.TrySetCanceled(cancellationToken));
+
+            lock (_syncLock)
+            {
+                _waitersQueue.Enqueue(waiter);
                 Refresh();
             }
-        }
-    }
 
-    private void Refresh()
-    {
-        lock (_lock)
-        {
-            while (_count < MaxCount && _waiters.TryDequeue(out var waiter))
-            {
-                // Don't increment if the waiter has been canceled
-                if (waiter.TrySetResult())
-                    _count++;
-            }
-        }
-    }
-
-    public async Task<IDisposable> AcquireAsync(CancellationToken cancellationToken = default)
-    {
-        if (_isDisposed)
-            throw new ObjectDisposedException(GetType().Name);
-
-        var waiter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        await using (_cts.Token.Register(() => waiter.TrySetCanceled(_cts.Token)))
-        await using (cancellationToken.Register(() => waiter.TrySetCanceled(cancellationToken)))
-        {
-            lock (_lock)
-            {
-                _waiters.Enqueue(waiter);
-                Refresh();
-            }
-
+            // 等待获取到信号量后返回一个表示已获取资源的对象
             await waiter.Task;
-
             return new AcquiredAccess(this);
         }
-    }
 
-    private void Release()
-    {
-        lock (_lock)
+        private void Release()
         {
-            _count--;
-            Refresh();
+            lock (_syncLock)
+            {
+                _currentCount--;
+                Refresh();
+            }
         }
-    }
 
-    public void Dispose()
-    {
-        _isDisposed = true;
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-}
+        public void Dispose()
+        {
+            _disposed = true;
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+        }
 
-internal partial class ResizableSemaphore
-{
-    private class AcquiredAccess(ResizableSemaphore semaphore) : IDisposable
-    {
-        public void Dispose() => semaphore.Release();
+        // 内部类，用于表示已经获取资源的状态，并在释放时减少信号量计数
+        private sealed class AcquiredAccess : IDisposable
+        {
+            private readonly ResizableSemaphore _semaphore;
+
+            public AcquiredAccess(ResizableSemaphore semaphore)
+            {
+                _semaphore = semaphore;
+            }
+
+            public void Dispose() => _semaphore.Release();
+        }
     }
 }
