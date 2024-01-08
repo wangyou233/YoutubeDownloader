@@ -9,6 +9,7 @@ public class ThrottleLock(TimeSpan interval) : IDisposable
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private DateTimeOffset _lastRequestInstant = DateTimeOffset.MinValue;
 
+    //WaitAsync 等待
     public async Task WaitAsync(CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
