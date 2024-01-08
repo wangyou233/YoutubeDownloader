@@ -10,7 +10,7 @@ namespace YoutubeDownloader.Utils
     internal static class ProcessEx
     {
         /// <summary>
-        /// 启动指定路径的进程，可选地添加命令行参数列表。
+        /// 启动指定路径的进程，可选地添加命令行参数列表。 
         /// 使用默认进程创建方式（不使用ShellExecute）。
         /// </summary>
         /// <param name="path">要执行的程序或文件的完整路径。</param>
