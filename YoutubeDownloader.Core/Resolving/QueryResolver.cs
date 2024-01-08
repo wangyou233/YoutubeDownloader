@@ -89,6 +89,9 @@ public class QueryResolver(IReadOnlyList<Cookie>? initialCookies = null)
         }
     }
 
+    //Meaningless Resolve Async
+    //
+    //
     public async Task<QueryResult> ResolveAsync(
         IReadOnlyList<string> queries,
         IProgress<Percentage>? progress = null,
