@@ -46,4 +46,24 @@ public static class StringExtensions
             string str = s.First().ToString().ToLower() + s.Substring(1);
             return str;
         }
+        /// <summary>
+        /// 首字母转大写
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static string FirstCharToUpper(this string s)
+        {
+            if(string.IsNullOrEmpty(s))
+                return s;
+
+            string str = s.First().ToString().ToUpper() + s.Substring(1);
+            return str;
+        }
+          public static string ToPath(this string s)
+        {
+            if(s.IsNull())
+                return string.Empty;
+
+            return s.Replace(@"\", "/");
+        }
 }
