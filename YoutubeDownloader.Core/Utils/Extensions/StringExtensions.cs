@@ -22,4 +22,28 @@ public static class StringExtensions
     {
     return !string.IsNullOrWhiteSpace(s);
     }
+            /// <summary>
+        /// 与字符串进行比较，忽略大小写
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool EqualsIgnoreCase(this string s, string value)
+        {
+            return s.Equals(value, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        /// <summary>
+        /// 首字母转小写
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static string FirstCharToLower(this string s)
+        {
+            if(string.IsNullOrEmpty(s))
+                return s;
+
+            string str = s.First().ToString().ToLower() + s.Substring(1);
+            return str;
+        }
 }
