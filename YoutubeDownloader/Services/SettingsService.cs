@@ -11,121 +11,99 @@ using PropertyChanged;
 using YoutubeDownloader.Core.Downloading;
 using Container = YoutubeExplode.Videos.Streams.Container;
 
-namespace YoutubeDownloader.Services;
-
-[AddINotifyPropertyChangedInterface]
-public partial class SettingsService()
-    : SettingsBase(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings.dat")),
-        INotifyPropertyChanged
+namespace YoutubeDownloader.Services
 {
-    public bool IsUkraineSupportMessageEnabled { get; set; } = true;
-
-    public bool IsAutoUpdateEnabled { get; set; } = true;
-
-    public bool IsDarkModeEnabled { get; set; } = IsDarkModeEnabledByDefault();
-
-    public bool IsAuthPersisted { get; set; } = true;
-
-    public bool ShouldInjectSubtitles { get; set; } = true;
-
-    public bool ShouldInjectTags { get; set; } = true;
-
-    public bool ShouldSkipExistingFiles { get; set; }
-
-    public string FileNameTemplate { get; set; } = "$title";
-
-    public int ParallelLimit { get; set; } = 2;
-
-    public Version? LastAppVersion { get; set; }
-
-    public IReadOnlyList<Cookie>? LastAuthCookies { get; set; }
-
-    // STJ cannot properly serialize immutable structs
-    [JsonConverter(typeof(ContainerJsonConverter))]
-    public Container LastContainer { get; set; } = Container.Mp4;
-
-    public VideoQualityPreference LastVideoQualityPreference { get; set; } =
-        VideoQualityPreference.Highest;
-
-    public override void Save()
+    [AddINotifyPropertyChangedInterface]
+    public partial class SettingsService : SettingsBase, INotifyPropertyChanged
     {
-        // Clear the cookies if they are not supposed to be persisted
-        var lastAuthCookies = LastAuthCookies;
-        if (!IsAuthPersisted)
-            LastAuthCookies = null;
-
-        base.Save();
-
-        LastAuthCookies = lastAuthCookies;
-    }
-}
-
-public partial class SettingsService
-{
-    private static bool IsDarkModeEnabledByDefault()
-    {
-        try
+        public SettingsService() : base(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings.dat"))
         {
-            return Registry
-                .CurrentUser.OpenSubKey(
+            // Default constructor
+        }
+
+        // Properties for various settings
+        public bool IsUkraineSupportMessageEnabled { get; set; } = true;
+        public bool IsAutoUpdateEnabled { get; set; } = true;
+        public bool IsDarkModeEnabled { get; set; } = IsDarkModeEnabledByDefault();
+        public bool IsAuthPersisted { get; set; } = true;
+        public bool ShouldInjectSubtitles { get; set; } = true;
+        public bool ShouldInjectTags { get; set; } = true;
+        public bool ShouldSkipExistingFiles { get; set; }
+        public string FileNameTemplate { get; set; } = "$title";
+        public int ParallelLimit { get; set; } = 2;
+        public Version? LastAppVersion { get; set; }
+        public IReadOnlyList<Cookie>? LastAuthCookies { get; set; }
+        
+        // Custom serialization for Container struct using a custom JsonConverter
+        [JsonConverter(typeof(ContainerJsonConverter))]
+        public Container LastContainer { get; set; } = Container.Mp4;
+        
+        public VideoQualityPreference LastVideoQualityPreference { get; set; } =
+            VideoQualityPreference.Highest;
+
+        public override void Save()
+        {
+            // Temporarily clear the cookies if they are not supposed to be persisted
+            Cookie[]? lastAuthCookiesArray = null;
+            if (!IsAuthPersisted && LastAuthCookies != null)
+                lastAuthCookiesArray = LastAuthCookies.ToArray();
+
+            LastAuthCookies = null;
+            base.Save();
+
+            // Restore the original value of LastAuthCookies
+            LastAuthCookies = lastAuthCookiesArray?.AsReadOnly();
+        }
+
+        private static bool IsDarkModeEnabledByDefault()
+        {
+            try
+            {
+                var registryKey = Registry.CurrentUser.OpenSubKey(
                     "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
                     false
-                )
-                ?.GetValue("AppsUseLightTheme")
-                is 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-}
+                );
 
-public partial class SettingsService
-{
-    private class ContainerJsonConverter : JsonConverter<Container>
-    {
-        public override Container Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options
-        )
-        {
-            Container? result = null;
+                if (registryKey is not null && registryKey.GetValue("AppsUseLightTheme") is int themeValue)
+                    return themeValue == 0;
 
-            if (reader.TokenType == JsonTokenType.StartObject)
+                return false;
+            }
+            catch
             {
-                while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+                return false;
+            }
+        }
+
+        // Nested class for JSON serialization/deserialization of Container enum
+        private sealed class ContainerJsonConverter : JsonConverter<Container>
+        {
+            public override Container Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType == JsonTokenType.StartObject)
                 {
-                    if (
-                        reader.TokenType == JsonTokenType.PropertyName
-                        && reader.GetString() == "Name"
-                        && reader.Read()
-                        && reader.TokenType == JsonTokenType.String
-                    )
+                    while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
                     {
-                        var name = reader.GetString();
-                        if (!string.IsNullOrWhiteSpace(name))
-                            result = new Container(name);
+                        if (reader.TokenType == JsonTokenType.PropertyName && reader.GetString() == "Name")
+                        {
+                            reader.Read();
+                            if (reader.TokenType == JsonTokenType.String && !string.IsNullOrWhiteSpace(reader.GetString()))
+                            {
+                                return new Container(reader.GetString());
+                            }
+                        }
                     }
                 }
+
+                throw new InvalidOperationException($"Invalid JSON for type '{typeToConvert.FullName}'.");
             }
 
-            return result
-                ?? throw new InvalidOperationException(
-                    $"Invalid JSON for type '{typeToConvert.FullName}'."
-                );
-        }
-
-        public override void Write(
-            Utf8JsonWriter writer,
-            Container value,
-            JsonSerializerOptions options
-        )
-        {
-            writer.WriteStartObject();
-            writer.WriteString("Name", value.Name);
-            writer.WriteEndObject();
+            public override void Write(Utf8JsonWriter writer, Container value, JsonSerializerOptions options)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("Name", value.Name);
+                writer.WriteEndObject();
+            }
         }
     }
 }
