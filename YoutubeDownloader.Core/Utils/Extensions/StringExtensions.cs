@@ -66,4 +66,8 @@ public static class StringExtensions
 
             return s.Replace(@"\", "/");
         }
+         public static T ToEnum<T>(this string name)
+        {
+            return (T)System.Enum.Parse(typeof(T), name);
+        }
 }
