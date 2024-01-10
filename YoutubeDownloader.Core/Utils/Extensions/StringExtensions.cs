@@ -92,4 +92,12 @@ public static class StringExtensions
             }
             return true;
         }
+        private static char IntToHex(int n)
+        {
+            if(n <=9)
+            {
+                return(char)(n +0x30);
+            }
+            return(char)((n -10)+0x41);
+        }
 }
