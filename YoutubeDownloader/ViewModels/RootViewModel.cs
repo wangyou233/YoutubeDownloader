@@ -8,134 +8,123 @@ using YoutubeDownloader.ViewModels.Components;
 using YoutubeDownloader.ViewModels.Dialogs;
 using YoutubeDownloader.ViewModels.Framework;
 
-namespace YoutubeDownloader.ViewModels;
-
-public class RootViewModel : Screen
+namespace YoutubeDownloader.ViewModels
 {
-    private readonly IViewModelFactory _viewModelFactory;
-    private readonly DialogManager _dialogManager;
-    private readonly SettingsService _settingsService;
-    private readonly UpdateService _updateService;
-
-    public SnackbarMessageQueue Notifications { get; } = new(TimeSpan.FromSeconds(5));
-
-    public DashboardViewModel Dashboard { get; }
-
-    public RootViewModel(
-        IViewModelFactory viewModelFactory,
-        DialogManager dialogManager,
-        SettingsService settingsService,
-        UpdateService updateService
-    )
+    public class RootViewModel : Screen
     {
-        _viewModelFactory = viewModelFactory;
-        _dialogManager = dialogManager;
-        _settingsService = settingsService;
-        _updateService = updateService;
+        private readonly IViewModelFactory _viewModelFactory;
+        private readonly DialogManager _dialogManager;
+        private readonly SettingsService _settingsService;
+        private readonly UpdateService _updateService;
 
-        Dashboard = _viewModelFactory.CreateDashboardViewModel();
+        public SnackbarMessageQueue Notifications { get; } = new SnackbarMessageQueue(TimeSpan.FromSeconds(5));
 
-        DisplayName = $"{App.Name} v{App.VersionString}";
-    }
+        public DashboardViewModel Dashboard { get; }
 
-    private async Task ShowUkraineSupportMessageAsync()
-    {
-        if (!_settingsService.IsUkraineSupportMessageEnabled)
-            return;
-
-        var dialog = _viewModelFactory.CreateMessageBoxViewModel(
-            "Thank you for supporting Ukraine!",
-            """
-            As Russia wages a genocidal war against my country, I'm grateful to everyone who continues to stand with Ukraine in our fight for freedom.
-
-            Click LEARN MORE to find ways that you can help.
-            """,
-            "LEARN MORE",
-            "CLOSE"
-        );
-
-        // Disable this message in the future
-        _settingsService.IsUkraineSupportMessageEnabled = false;
-        _settingsService.Save();
-
-        if (await _dialogManager.ShowDialogAsync(dialog) == true)
-            ProcessEx.StartShellExecute("https://tyrrrz.me/ukraine?source=youtubedownloader");
-    }
-
-    private async Task CheckForUpdatesAsync()
-    {
-        try
-        {
-            var updateVersion = await _updateService.CheckForUpdatesAsync();
-            if (updateVersion is null)
-                return;
-
-            Notifications.Enqueue($"Downloading update to {App.Name} v{updateVersion}...");
-            await _updateService.PrepareUpdateAsync(updateVersion);
-
-            Notifications.Enqueue(
-                "Update has been downloaded and will be installed when you exit",
-                "INSTALL NOW",
-                () =>
-                {
-                    _updateService.FinalizeUpdate(true);
-                    RequestClose();
-                }
-            );
-        }
-        catch
-        {
-            // Failure to update shouldn't crash the application
-            Notifications.Enqueue("Failed to perform application update");
-        }
-    }
-
-    public async void OnViewFullyLoaded()
-    {
-        await ShowUkraineSupportMessageAsync();
-        await CheckForUpdatesAsync();
-    }
-
-    protected override void OnViewLoaded()
-    {
-        base.OnViewLoaded();
-
-        _settingsService.Load();
-
-        // Sync the theme with settings
-        if (_settingsService.IsDarkModeEnabled)
-        {
-            App.SetDarkTheme();
-        }
-        else
-        {
-            App.SetLightTheme();
-        }
-
-        // App has just been updated, display the changelog
-        if (
-            _settingsService.LastAppVersion is not null
-            && _settingsService.LastAppVersion != App.Version
+        public RootViewModel(
+            IViewModelFactory viewModelFactory,
+            DialogManager dialogManager,
+            SettingsService settingsService,
+            UpdateService updateService
         )
         {
-            Notifications.Enqueue(
-                $"Successfully updated to {App.Name} v{App.VersionString}",
-                "WHAT'S NEW",
-                () => ProcessEx.StartShellExecute(App.LatestReleaseUrl)
+            _viewModelFactory = viewModelFactory;
+            _dialogManager = dialogManager;
+            _settingsService = settingsService;
+            _updateService = updateService;
+
+            Dashboard = viewModelFactory.CreateDashboardViewModel();
+
+            DisplayName = $"{App.Name} v{App.VersionString}";
+        }
+
+        private async Task HandleUkraineSupportAsync()
+        {
+            if (!_settingsService.IsUkraineSupportMessageEnabled)
+                return;
+
+            var messageBox = _viewModelFactory.CreateMessageBoxViewModel(
+                "Thank you for supporting Ukraine!",
+                $@"As Russia wages a genocidal war against my country, I'm grateful to everyone who continues to stand with Ukraine in our fight for freedom.
+
+                Click LEARN MORE to find ways that you can help.",
+                "LEARN MORE",
+                "CLOSE"
             );
 
-            _settingsService.LastAppVersion = App.Version;
-            _settingsService.Save();
+            // Disable the message and save the setting
+            _settingsService.IsUkraineSupportMessageEnabled = false;
+            await _settingsService.SaveAsync();
+
+            if (await _dialogManager.ShowDialogAsync(messageBox) == true)
+            {
+                ProcessEx.StartShellExecute("https://tyrrrz.me/ukraine?source=youtubedownloader");
+            }
         }
-    }
 
-    protected override void OnClose()
-    {
-        base.OnClose();
+        private async Task CheckForAndHandleUpdatesAsync()
+        {
+            try
+            {
+                var updateVersion = await _updateService.CheckForUpdatesAsync();
+                if (updateVersion is null)
+                    return;
 
-        Dashboard.CancelAllDownloads();
+                Notifications.Enqueue($"Downloading update to {App.Name} v{updateVersion}...");
+                await _updateService.PrepareUpdateAsync(updateVersion);
 
-        _settingsService.Save();
-        _updateService.FinalizeUpdate(false);
+                Notifications.Enqueue(
+                    $"Update has been downloaded and will be installed when you exit",
+                    "INSTALL NOW",
+                    () =>
+                    {
+                        _updateService.FinalizeUpdate(true);
+                        RequestClose();
+                    },
+                    TimeSpan.FromMinutes(5)
+                );
+            }
+            catch
+            {
+                Notifications.Enqueue("Failed to perform application update", TimeSpan.FromSeconds(5));
+            }
+        }
+
+        protected override async void OnViewLoaded()
+        {
+            base.OnViewLoaded();
+
+            await _settingsService.LoadAsync();
+
+            // Synchronize theme with settings
+            App.SetTheme(_settingsService.IsDarkModeEnabled ? Theme.Dark : Theme.Light);
+
+            // Show changelog on successful update
+            if (_settingsService.LastAppVersion != App.Version)
+            {
+                Notifications.Enqueue(
+                    $"Successfully updated to {App.Name} v{App.VersionString}",
+                    "WHAT'S NEW",
+                    () => ProcessEx.StartShellExecute(App.LatestReleaseUrl),
+                    TimeSpan.FromSeconds(5)
+                );
+
+                _settingsService.LastAppVersion = App.Version;
+                await _settingsService.SaveAsync();
+            }
+
+            await HandleUkraineSupportAsync();
+            await CheckForAndHandleUpdatesAsync();
+        }
+
+        protected override async void OnClose()
+        {
+            Dashboard.CancelAllDownloads();
+
+            await _settingsService.SaveAsync();
+            _updateService.FinalizeUpdate(false);
+
+            base.OnClose();
+        }
     }
 }

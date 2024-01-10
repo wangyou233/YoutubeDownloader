@@ -6,68 +6,76 @@ using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Stylet;
 
-namespace YoutubeDownloader.ViewModels.Framework;
-
-public class DialogManager(IViewManager viewManager) : IDisposable
+namespace YoutubeDownloader.ViewModels.Framework
 {
-    private readonly SemaphoreSlim _dialogLock = new(1, 1);
-
-    public async ValueTask<T?> ShowDialogAsync<T>(DialogScreen<T> dialogScreen)
+    public class DialogManager : IDisposable
     {
-        var view = viewManager.CreateAndBindViewForModelIfNecessary(dialogScreen);
+        private readonly SemaphoreSlim _dialogSemaphore = new(1, 1);
 
-        void OnDialogOpened(object? openSender, DialogOpenedEventArgs openArgs)
+        public DialogManager(IViewManager viewManager)
         {
-            void OnScreenClosed(object? closeSender, EventArgs closeArgs)
+            ViewManager = viewManager;
+        }
+
+        private IViewManager ViewManager { get; }
+
+        public async ValueTask<T?> ShowDialogAsync<T>(DialogScreen<T> dialogScreen)
+        {
+            var view = ViewManager.CreateAndBindViewForModelIfNecessary(dialogScreen);
+
+            void OnDialogOpened(object? sender, DialogOpenedEventArgs args)
             {
-                try
+                void OnScreenClosed(object? closeSender, EventArgs closeArgs)
                 {
-                    openArgs.Session.Close();
-                }
-                catch (InvalidOperationException)
-                {
-                    // Race condition: dialog is already being closed
+                    try
+                    {
+                        args.Session.Close();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Ignore if dialog is already being closed
+                    }
+
+                    dialogScreen.Closed -= OnScreenClosed;
                 }
 
-                dialogScreen.Closed -= OnScreenClosed;
+                dialogScreen.Closed += OnScreenClosed;
             }
 
-            dialogScreen.Closed += OnScreenClosed;
+            await _dialogSemaphore.WaitAsync();
+            try
+            {
+                await DialogHost.Show(view, OnDialogOpened);
+                return dialogScreen.DialogResult;
+            }
+            finally
+            {
+                _dialogSemaphore.Release();
+            }
         }
 
-        await _dialogLock.WaitAsync();
-        try
+        public string? PromptSaveFilePath(string filter = "All files|*.*", string defaultFilePath = "")
         {
-            await DialogHost.Show(view, OnDialogOpened);
-            return dialogScreen.DialogResult;
+            using var dialog = new SaveFileDialog
+            {
+                Filter = filter,
+                AddExtension = true,
+                FileName = defaultFilePath,
+                DefaultExt = Path.GetExtension(defaultFilePath)
+            };
+
+            return dialog.ShowDialog() == true ? dialog.FileName : null;
         }
-        finally
+
+        public string? PromptDirectoryPath(string defaultDirPath = "")
         {
-            _dialogLock.Release();
+            using var dialog = new OpenFolderDialog { InitialDirectory = defaultDirPath };
+            return dialog.ShowDialog() == true ? dialog.FolderName : null;
         }
-    }
 
-    public string? PromptSaveFilePath(string filter = "All files|*.*", string defaultFilePath = "")
-    {
-        var dialog = new SaveFileDialog
+        public void Dispose()
         {
-            Filter = filter,
-            AddExtension = true,
-            FileName = defaultFilePath,
-            DefaultExt = Path.GetExtension(defaultFilePath)
-        };
-
-        return dialog.ShowDialog() == true ? dialog.FileName : null;
-    }
-
-    public string? PromptDirectoryPath(string defaultDirPath = "")
-    {
-        var dialog = new OpenFolderDialog { InitialDirectory = defaultDirPath };
-        return dialog.ShowDialog() == true ? dialog.FolderName : null;
-    }
-
-    public void Dispose()
-    {
-        _dialogLock.Dispose();
+            _dialogSemaphore.Dispose();
+        }
     }
 }
