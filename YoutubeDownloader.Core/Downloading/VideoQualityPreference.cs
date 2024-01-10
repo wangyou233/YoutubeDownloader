@@ -9,22 +9,22 @@ namespace YoutubeDownloader.Core.Downloading
     public enum VideoQualityPreference
     {
         /// <summary>
-        /// Specifies to download the lowest available video quality.
+        /// Specifies to download the lowest available video quality. 
         /// </summary>
         Lowest,
 
         /// <summary>
-        /// Specifies to download a video quality up to 480p (standard definition).
+        /// Specifies to download a video quality up to 480p (standard definition). 
         /// </summary>
         UpTo480p,
 
         /// <summary>
-        /// Specifies to download a video quality up to 720p (high definition).
+        /// Specifies to download a video quality up to 720p (high definition). 
         /// </summary>
         UpTo720p,
 
         /// <summary>
-        /// Specifies to download a video quality up to 1080p (full high definition).
+        /// Specifies to download a video quality up to 1080p (full high definition). 
         /// </summary>
         UpTo1080p,
 

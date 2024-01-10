@@ -23,7 +23,7 @@ namespace YoutubeDownloader.Utils
             // 获取基础文件路径的目录部分
             var baseDirPath = Path.GetDirectoryName(baseFilePath);
 
-            // 分离基础文件名和扩展名
+            // 分离基础文件名和扩展名1
             var baseFileNameWithoutExtension = Path.GetFileNameWithoutExtension(baseFilePath);
             var baseFileExtension = Path.GetExtension(baseFilePath);
 

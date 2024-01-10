@@ -33,7 +33,7 @@ namespace YoutubeDownloader.ViewModels.Framework
                     }
                     catch (InvalidOperationException)
                     {
-                        // Ignore if dialog is already being closed
+                        // Ignore if  dialog is already being closed
                     }
 
                     dialogScreen.Closed -= OnScreenClosed;

@@ -15,14 +15,14 @@ using YoutubeExplode.Videos;
 namespace YoutubeDownloader.Core.Resolving
 {
     /// <summary>
-    /// Resolves YouTube queries (video URLs, channel URLs, playlist URLs, usernames, handles, and search keywords) into a structured QueryResult.
+    /// Resolves YouTube queries (video URLs, channel URLs, playlist URLs, usernames, handles, and search keywords) into a structured QueryResult. 
     /// </summary>
     public class QueryResolver : IQueryResolver
     {
         private readonly YoutubeClient _youtube;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="QueryResolver"/> class with an optional set of initial cookies for authentication purposes.
+        /// Initializes a new instance of the <see cref="QueryResolver"/> class with an optional set of initial cookies for authentication purposes. 
         /// </summary>
         /// <param name="initialCookies">A list of cookies to use when initializing the YouTube client. If null or empty, no cookies will be used.</param>
         public QueryResolver(IReadOnlyList<Cookie>? initialCookies = null)
@@ -35,7 +35,7 @@ namespace YoutubeDownloader.Core.Resolving
         /// Resolves a single YouTube query into a <see cref="QueryResult"/>.
         /// </summary>
         /// <param name="query">The YouTube query, which could be a video URL, playlist URL, channel URL, username, handle, or search keyword.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation .</param>
         /// <returns>A <see cref="QueryResult"/> representing the resolved content.</returns>
         public async Task<QueryResult> ResolveAsync(
             string query,

@@ -47,13 +47,13 @@ namespace YoutubeDownloader.Core.Downloading
                         .Where(o => o.VideoQuality?.MaxHeight <= 1080)
                         .LastOrDefault(o => o.Container == PreferredContainer),
 
-                // 720p及以下：查找分辨率为720p或更低、容器类型相符的选项
+                // 720p及以下：查找分辨率为720p或更低、容器类型相符的选项 
                 VideoQualityPreference.UpTo720p
                     => orderedOptions
                         .Where(o => o.VideoQuality?.MaxHeight <= 720)
                         .LastOrDefault(o => o.Container == PreferredContainer),
 
-                // 480p及以下：查找分辨率为480p或更低、容器类型相符的选项
+                // 480p及以下：查找分辨率为480p或更低、容器类型相符的选项 
                 VideoQualityPreference.UpTo480p
                     => orderedOptions
                         .Where(o => o.VideoQuality?.MaxHeight <= 480)

@@ -36,7 +36,7 @@ namespace YoutubeDownloader.Core.Downloading
                     }
                     else
                     {
-                        // 获取匹配的音频流信息
+                        // 获取匹配的音频流信息 
                         var matchingAudioStream = manifest.GetAudioStreams()
                             .OrderByDescending(s => s.Container == videoStreamInfo.Container)
                             .ThenByDescending(s => s is AudioOnlyStreamInfo)
@@ -58,7 +58,7 @@ namespace YoutubeDownloader.Core.Downloading
 
             IEnumerable<VideoDownloadOption> GenerateAudioOnlyOptions()
             {
-                // WebM-based audio-only containers
+                // WebM-based audio-only containers 
                 {
                     var webMAudio = manifest.GetAudioStreams()
                         .OrderByDescending(s => s.Container == Container.WebM)
