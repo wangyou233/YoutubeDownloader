@@ -70,4 +70,26 @@ public static class StringExtensions
         {
             return (T)System.Enum.Parse(typeof(T), name);
         }
+         private static bool IsSafeChar(char ch)
+        {
+            if((((ch <'a')||(ch >'z'))&&((ch <'A')||(ch >'Z')))&&((ch <'0')||(ch >'9')))
+            {
+                switch(ch)
+                {
+                    case'-':
+                    case'.':
+                        break;//
+                    case'+':
+                    case',':
+                        return false;//
+                    default://
+                        if(ch !='_')
+                        {
+                            return false;
+                        }
+                        break;
+                }
+            }
+            return true;
+        }
 }
