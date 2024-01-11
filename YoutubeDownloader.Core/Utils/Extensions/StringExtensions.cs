@@ -66,6 +66,51 @@ public static class StringExtensions
 
             return s.Replace(@"\", "/");
         }
+         public static string UrlEncode(this string str)
+        {
+            var encoding = UTF8Encoding.UTF8;
+            byte[] bytes = encoding.GetBytes(str);
+            int IsSafe = 0;
+            int NoSafe = 0;
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                char ch = (char) bytes[i];
+                if (ch == ' ')
+                {
+                    IsSafe++;
+                }
+                else if(!IsSafeChar(ch))
+                {
+                    NoSafe++;
+                }
+            }
+            if (IsSafe == 0 && NoSafe == 0)
+            {
+                return str;
+            }
+            byte[] buffer = new byte[bytes.Length + (NoSafe * 2)];
+            int num1 = 0;
+            for (int j = 0; j < bytes.Length; j++)
+            {
+                byte num2 = bytes[j];
+                char ch2 = (char) num2;
+                if (IsSafeChar(ch2))
+                {
+                    buffer[num1++] = num2;
+                }
+                else if(ch2 == ' ')
+                {
+                    buffer[num1++] = 0x2B;
+                }
+                else
+                {
+                    buffer[num1++] = 0x25;
+                    buffer[num1++] = (byte) IntToHex((num2 >> 4) & 15);
+                    buffer[num1++] = (byte) IntToHex(num2 & 15);
+                }
+            }
+            return encoding.GetString(buffer);
+        }
          public static T ToEnum<T>(this string name)
         {
             return (T)System.Enum.Parse(typeof(T), name);
