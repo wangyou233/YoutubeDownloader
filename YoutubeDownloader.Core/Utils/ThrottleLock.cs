@@ -9,7 +9,10 @@ public class ThrottleLock(TimeSpan interval) : IDisposable
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private DateTimeOffset _lastRequestInstant = DateTimeOffset.MinValue;
 
-    //WaitAsync 等待
+    /// <summary>
+    /// Asynchronously waits for the throttle interval before allowing the next request.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token to cancel the wait operation.</param>
     public async Task WaitAsync(CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
@@ -30,5 +33,8 @@ public class ThrottleLock(TimeSpan interval) : IDisposable
         }
     }
 
+    /// <summary>
+    /// Releases the resources used by the throttle lock.
+    /// </summary>
     public void Dispose() => _semaphore.Dispose();
 }
