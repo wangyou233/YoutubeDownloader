@@ -235,7 +235,7 @@ public static class String {
     #region Extract(提取字符串中的变量值)
 
     /// <summary>
-    /// 提取字符串中的变量值
+    /// 提取字符串中的变量值 
     /// </summary>
     /// <param name="value">原始值,范例: Hello,World</param>
     /// <param name="format">字符串格式,范例: 原始值为Hello,World,格式为Hello,{value} ,则value变量的值为World</param>
@@ -243,9 +243,9 @@ public static class String {
         var result = new Dictionary<string, string>();
         if ( value.IsEmpty() )
             return result;
-        if ( format.IsEmpty() )
+        if ( format.IsEmpty()  )
             return result;
-        if ( format.Contains( "{", StringComparison.Ordinal ) == false )
+        if ( format.Contains(  "{", StringComparison.Ordinal ) == false )
             return result;
         if ( format.Contains( "}", StringComparison.Ordinal ) == false )
             return result;
@@ -254,9 +254,9 @@ public static class String {
     }
 
     /// <summary>
-    /// 拆分格式字符串
+    /// 拆分格式字符串 
     /// </summary>
-    private static List<string> SplitFormat( string format ) {
+    private static List<string>  SplitFormat( string format ) {
         var result = new List<string>();
         var item = new StringBuilder();
         for ( int i = 0; i < format.Length; i++ ) {
@@ -294,9 +294,9 @@ public static class String {
     }
 
     /// <summary>
-    /// 提取字符串中变量值
+    /// 提取字符串中变量值 
     /// </summary>
-    private static IDictionary<string, string> ExtractValue( string value, List<string> formatItems ) {
+    private static  IDictionary<string, string> ExtractValue( string value, List<string> formatItems ) {
         var result = new Dictionary<string, string>();
         var leftIndex = 0;
         var length = 0;
@@ -323,7 +323,7 @@ public static class String {
             var variableValue = value.Substring( leftIndex, length );
             result.Add( varName, variableValue );
             leftIndex += length;
-        }
+        } 
         return result;
     }
 

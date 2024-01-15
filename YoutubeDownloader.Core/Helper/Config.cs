@@ -54,7 +54,7 @@ public static class Config {
     /// 获取配置
     /// </summary>
     private static IConfiguration GetConfiguration() {
-        return _configuration ??= CreateConfiguration();
+        return _configuration ?? = CreateConfiguration();
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public static class Config {
             .SetBasePath( basePath )
             .AddJsonFile( "appsettings.json", true, false );
         var environment = Environment.GetEnvironmentName();
-        if ( environment.IsEmpty() == false )
+        if ( environment.IsEmpty() == false  )
             builder.AddJsonFile( $"appsettings.{environment}.json", true, false );
         builder.AddEnvironmentVariables();
         if ( jsonFiles == null )

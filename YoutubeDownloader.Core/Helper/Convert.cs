@@ -12,7 +12,7 @@ public static class Convert {
     /// </summary>
     /// <param name="input">输入值</param>
     public static int ToInt( object input ) {
-        return ToIntOrNull( input ) ?? 0;
+        return ToIntOrNull( input  ) ?? 0;
     }
 
     #endregion

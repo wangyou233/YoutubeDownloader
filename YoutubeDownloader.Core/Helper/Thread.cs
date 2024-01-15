@@ -18,7 +18,7 @@ public static class Thread {
     }
 
     /// <summary>
-    /// 并发执行多个操作
+    /// 并发执行多个操作 
     /// </summary>
     /// <param name="actions">操作集合</param>
     public static void ParallelInvoke( params Action[] actions ) {
@@ -26,7 +26,7 @@ public static class Thread {
     }
 
     /// <summary>
-    /// 循环并发执行操作
+    /// 循环并发执行操作 
     /// </summary>
     /// <param name="action">操作</param>
     /// <param name="count">执行次数</param>
@@ -39,7 +39,7 @@ public static class Thread {
         Parallel.For( 0, count, options, i => action() );
     }
 
-	/// <summary>
+	/// <summary> 
 	/// 循环并发执行操作
 	/// </summary>
 	/// <param name="action">操作</param>
@@ -54,7 +54,7 @@ public static class Thread {
     }
 
     /// <summary>
-    /// 循环并发执行操作
+    /// 循环并发执行操作 
     /// </summary>
     /// <param name="action">操作</param>
     /// <param name="count">执行次数</param>

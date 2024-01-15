@@ -99,7 +99,7 @@ public static class Regex {
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <param name="pattern">模式字符串</param>
-    public static Match Match( string input, string pattern ) {
+    public static Match Match( string input, string pattern  ) {
         return System.Text.RegularExpressions.Regex.Match( input, pattern );
     }
 
@@ -109,7 +109,7 @@ public static class Regex {
     /// <param name="input">输入字符串</param>
     /// <param name="pattern">模式字符串</param>
     /// <param name="options">选项</param>
-    public static Match Match( string input, string pattern, RegexOptions options ) {
+    public static Match Match(  string input, string pattern, RegexOptions options ) {
         return System.Text.RegularExpressions.Regex.Match( input, pattern, options );
     }
 
